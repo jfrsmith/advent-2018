@@ -1,18 +1,19 @@
+use std::collections::HashSet;
+
 fn part_1_solve(input_str: &str) -> i32 {
-    input_str.lines().map(|x| x.parse::<i32>().unwrap()).fold(0, |acc, x| acc + x)
+    input_str.lines().map(|x| x.parse::<i32>().unwrap()).sum()
 }
 
 fn part_2_solve(input_str: &str) -> i32 {
-    let mut frequencies = Vec::new();
+    let mut frequencies = HashSet::new();
+    let mut frequency = 0;
  
-    let _ : usize = input_str.lines().cycle().map(|x| x.parse::<i32>().unwrap()).take_while(|x| {
-        let new_val = frequencies.last().unwrap_or(&0) + x;
-        let contains = frequencies.contains(&new_val);
-        frequencies.push(new_val);
-        !contains
+    let _ = input_str.lines().cycle().map(|x| x.parse::<i32>().unwrap()).take_while(|x| {
+        frequency += x;
+        frequencies.insert(frequency)
     }).count();
 
-    *frequencies.last().unwrap()
+    frequency
 }
 
 fn main() {
