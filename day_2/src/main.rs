@@ -31,28 +31,30 @@ fn part_1_solve(input_str: &str) -> i32 {
     }).fold(SumTuple::new((0u8,0u8)), |acc, t| acc.add(t)).product()
 }
 
-fn compare(a: &str, b: &str) -> bool {
-    a.chars().zip(b.chars()).filter(|&(a,b)| a != b).count() == 1
+fn symmetric_diff_count(a: &str, b: &str) -> usize {
+    a.chars().zip(b.chars()).filter(|&(a,b)| a != b).count()
 }
 
-fn part_2_solve(input_str: &str) -> Vec<char> {
-    
-    /*let lines_a = input_str.lines().collect::<Vec<&str>>();
+fn find_symmetric_diff(f: &str, v: &Vec<&str>) -> Option<String> {
+    v.into_iter().map(|s| s.to_string()).find(|s| symmetric_diff_count(f, s) == 1)
+}
 
-    for next_str in lines_a {
-        //let found = find_match(&next_str, compare_lines);
-        let found = lines_a.to_vec().into_iter().find(|s| compare(&next_str, s));
-        if found.is_some() {
-            println!("found: {} <==> {}", next_str, found.unwrap());
+fn part_2_solve(input_str: &str) -> String {
+    let lines = input_str.lines().collect::<Vec<&str>>();
+
+    for i in 0..lines.len() {
+        if let Some(found) = find_symmetric_diff(lines[i], &lines) {
+            let union : (Vec<char>, Vec<char>) = lines[i].chars().zip(found.chars()).filter(|&(a,b)| a == b).unzip();
+            return union.0.into_iter().collect::<String>();
         }
-    }*/
+    }
 
-    vec!('a')
+    unreachable!()
 }
 
 fn main() {
     println!("Part 1: {}", part_1_solve(include_str!("../input/input.txt")));
-    //println!("Part 2: {}", part_2_solve(include_str!("../input/input.txt")));
+    println!("Part 2: {:?}", part_2_solve(include_str!("../input/input.txt")));
 }
 
 #[test]
