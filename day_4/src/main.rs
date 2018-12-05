@@ -47,6 +47,7 @@ fn parse_event(event_str: &str, at_time: NaiveDateTime) -> Event {
 }
 
 type SleepMap = HashMap<i64, i32>;
+type GuardSleepMap = HashMap<i32, SleepMap>;
 
 fn update_sleep_map(from: &NaiveDateTime, to: &NaiveDateTime, sleep_map : &mut SleepMap) {
     let start_min = (*from - from.date().and_hms(0,0,0)).num_minutes();
@@ -56,7 +57,7 @@ fn update_sleep_map(from: &NaiveDateTime, to: &NaiveDateTime, sleep_map : &mut S
     }
 }
 
-fn part_1_solve(input_str: &str) -> i32 {
+fn generate_guard_sleep_map(input_str: &str) -> GuardSleepMap {
     let mut entries = input_str.lines().map(|l| {
                         let splits: Vec<&str> = l.split(|c| c == '[' || c == ']').collect();
                         let timestamp = parse_time(splits[1]);
@@ -89,17 +90,49 @@ fn part_1_solve(input_str: &str) -> i32 {
         prev_event = entry.1;
     }
 
+    guard_map
+}
+
+fn print_guard(guard_num: i32, map: &SleepMap) {
+    println!("       ")
+    print!("{:04}   ")
+}
+
+fn print_guards(map: &GuardMap) {
+    for (guard_num, sleep_map) in map {
+        print_guard(guard_num, sleep_map);
+    }
+}
+
+fn part_1_solve(input_str: &str) -> i32 {
+    let guard_map = generate_guard_sleep_map(input_str);
     let sleepiest_guard = guard_map.iter().max_by_key(|(_,v)| v.values().sum::<i32>()).unwrap();
     let sleepiest_minute = sleepiest_guard.1.iter().max_by_key(|(_,&v)| v).unwrap();
 
     *sleepiest_guard.0 * (*sleepiest_minute.0 as i32)
 }
 
+fn part_2_solve(input_str: &str) -> i32 {
+    let guard_map = generate_guard_sleep_map(input_str);
+    let sleepiest_guard = guard_map.iter().max_by_key(|(_,v)| v.iter().max_by_key(|(_,&v)| v).unwrap()).unwrap();
+    let sleepiest_minute = sleepiest_guard.1.iter().max_by_key(|(_,&v)| v).unwrap();
+
+    println!("{:?} @ {:?}", sleepiest_guard, sleepiest_minute);
+    
+    *sleepiest_guard.0 * (*sleepiest_minute.0 as i32)
+}
+
 fn main() {
     println!("Part 1: {}", part_1_solve(include_str!("../input/input.txt")));
+    println!("Part 2: {}", part_2_solve(include_str!("../input/input.txt")));
 }
 
 #[test]
 fn part_1_test() {
     assert_eq!(part_1_solve(include_str!("../input/test_input_1.txt")), 240);
+}
+
+#[test]
+fn part_2_test() {
+    assert_eq!(part_2_solve(include_str!("../input/test_input_1.txt")), 4455);
 }
