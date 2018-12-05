@@ -46,8 +46,14 @@ fn parse_event(event_str: &str, at_time: NaiveDateTime) -> Event {
     }
 }
 
-fn get_sleep_map(start_time: &NaiveDateTime, end_time: &NaiveDateTime) -> Vec<i32> {
-    
+type SleepMap = HashMap<i64, i32>;
+
+fn update_sleep_map(from: &NaiveDateTime, to: &NaiveDateTime, sleep_map : &mut SleepMap) {
+    let start_min = (*from - from.date().and_hms(0,0,0)).num_minutes();
+    let end_min = start_min + (*to - *from).num_minutes();
+    for min in start_min..end_min {
+        *sleep_map.entry(min).or_insert(0) += 1;
+    }
 }
 
 fn part_1_solve(input_str: &str) -> i32 {
@@ -72,8 +78,7 @@ fn part_1_solve(input_str: &str) -> i32 {
             Event::Wake(wake_time) => {
                 match prev_event {
                     Event::Sleep(sleep_time) => {
-                        let time_asleep_mins = (wake_time - sleep_time).num_minutes();
-                        let minute_map = *guard_map.entry(current_guard).or_insert(vec![0; len]);
+                        update_sleep_map(&sleep_time, &wake_time, guard_map.entry(current_guard).or_insert(SleepMap::new()));
                     },
                     _ => {}
                 }
@@ -84,9 +89,10 @@ fn part_1_solve(input_str: &str) -> i32 {
         prev_event = entry.1;
     }
 
-    println!("{:?}", guard_map);
+    let sleepiest_guard = guard_map.iter().max_by_key(|(_,v)| v.values().sum::<i32>()).unwrap();
+    let sleepiest_minute = sleepiest_guard.1.iter().max_by_key(|(_,&v)| v).unwrap();
 
-    0
+    *sleepiest_guard.0 * (*sleepiest_minute.0 as i32)
 }
 
 fn main() {
