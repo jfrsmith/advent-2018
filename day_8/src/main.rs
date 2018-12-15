@@ -1,7 +1,21 @@
+fn parse_metadata(stream: &Vec<u32>, start: usize, end: usize, vals: &Vec<u32>) -> (u32, u32) {
+    let metadata_sum = stream[start..end].iter().sum();
+    let node_value = match vals.is_empty() {
+        true => metadata_sum,
+        false => stream[start..end].iter().fold(0, |acc, &m| {
+            if m == 0 || m > (vals.len() as u32) {
+                acc
+            } else {
+                acc + vals.get((m-1) as usize).unwrap()
+            }
+        })
+    };
+
+    (metadata_sum, node_value)
+}
+
 fn parse_stream(stream: &Vec<u32>, node_start: usize) -> (u32, usize, u32) {
     let header = &stream[node_start..node_start+2];
-    println!("Parse header => {:?}", header);
-
     let mut total = 0;
     let mut read_idx = node_start + 2;
 
@@ -12,25 +26,11 @@ fn parse_stream(stream: &Vec<u32>, node_start: usize) -> (u32, usize, u32) {
         val
     }).collect::<Vec<u32>>();
 
-    println!("Child node values: {:?}", child_vals);
-
     let end = read_idx + header[1] as usize;
 
-    let (sum, value) = stream[read_idx..end].iter().fold((total,0), |acc, m| {
-        let inner_sum = acc.0 + m;
-        let inner_val = if child_vals.len() > 0 {
-                match *m > 0 && *m <= child_vals.len() as u32 {
-                    false => 0,
-                    true => acc.1 + child_vals.get((*m-1) as usize).unwrap()
-                }
-            } else {
-                acc.1 + m
-            };
+    let (metadata_sum, node_value) = parse_metadata(stream, read_idx, end, &child_vals);
 
-        (inner_sum, inner_val)
-    });
-
-    (sum, end, value)
+    (total + metadata_sum, end, node_value)
 }
 
 fn part_1_solve(input_str: &str) -> u32 {
